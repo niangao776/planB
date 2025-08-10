@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏直播数据管理系统</title>
+    <style>
+        /* 新增登录框样式 */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .login-box {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            width: 300px;
+            text-align: center;
+        }
+        .login-box h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .login-box input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .login-box button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        .login-box button:hover {
+            background-color: #45a049;
+        }
+        .error-message {
+            color: red;
+            margin-top: 10px;
+            display: none;
+        }
+
+        /* 原有样式 */
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .action-buttons {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .export-btn {
+            background-color: #2196F3;
+        }
+        .export-btn:hover {
+            background-color: #0b7dda;
+        }
+        .clear-btn {
+            background-color: #f44336;
+        }
+        .clear-btn:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <!-- 登录框 -->
+    <div id="loginOverlay" class="login-overlay">
+        <div class="login-box">
+            <h2>游戏直播数据管理系统</h2>
+            <p>请输入您的姓名以继续</p>
+            <input type="text" id="usernameInput" placeholder="请输入您的姓名">
+            <button id="loginBtn">登录</button>
+            <p id="errorMessage" class="error-message">姓名不正确，请重试！</p>
+        </div>
+    </div>
+
+    <!-- 主内容区（默认隐藏） -->
+    <div id="mainContent" class="container" style="display:none;">
+        <h1>游戏直播数据管理系统</h1>
+        <p id="welcomeMessage">欢迎你！<span id="currentUser"></span>！</p>
+        
+        <div class="form-group">
+            <label for="liveDate">直播日期</label>
+            <input type="date" id="liveDate" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="liveSession">直播场次</label>
+            <select id="liveSession" required>
+                <option value="">请选择场次</option>
+                <option value="下午场">下午场</option>
+                <option value="晚上场">晚上场</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="clientId">客户ID</label>
+            <input type="text" id="clientId" placeholder="请输入客户ID" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="orderAmount">哈弗币(W)</label>
+            <input type="number" id="orderAmount" placeholder="请输入金额" min="0" step="1" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="orderType">下单类型</label>
+            <select id="orderType" required>
+                <option value="">请选择类型</option>
+                <option value="跑刀">跑刀</option>
+                <option value="护航">护航</option>
+                <option value="其他">其他</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="clientSource">客户途径</label>
+            <select id="clientSource" required>
+                <option value="">请选择途径</option>
+                <option value="企业微信">企业微信</option>
+                <option value="个人微信">个人微信</option>
+                <option value="抖音私信">抖音私信</option>
+                <option value="其他">其他</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="remarks">备注</label>
+            <input type="text" id="remarks" placeholder="可选备注信息">
+        </div>
+        
+        <button id="addBtn">添加记录</button>
+        
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th>直播日期</th>
+                    <th>直播场次</th>
+                    <th>客户ID</th>
+                    <th>哈弗币(W)</th>
+                    <th>下单类型</th>
+                    <th>客户途径</th>
+                    <th>备注</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <!-- 数据将在这里动态添加 -->
+            </tbody>
+        </table>
+        
+        <div class="action-buttons">
+            <button id="exportBtn" class="export-btn">导出Excel</button>
+            <button id="clearBtn" class="clear-btn">清空数据</button>
+            <button id="logoutBtn" class="clear-btn">退出登录</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+    <script>
+        // 允许的用户名列表
+        const allowedUsers = ["王佳豪", "段成己", "赵志杰", "宋继盛"];
+        
+        // 登录功能
+        document.getElementById('loginBtn').addEventListener('click', function() {
+            const username = document.getElementById('usernameInput').value.trim();
+            const errorMessage = document.getElementById('errorMessage');
+            
+            if (allowedUsers.includes(username)) {
+                // 登录成功
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                document.getElementById('currentUser').textContent = username;
+                
+                // 设置当前用户到本地存储
+                localStorage.setItem('currentUser', username);
+                
+                // 加载数据
+                loadData();
+            } else {
+                // 登录失败
+                errorMessage.style.display = 'block';
+            }
+        });
+        
+        // 退出登录
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            if (confirm('确定要退出登录吗？')) {
+                localStorage.removeItem('currentUser');
+                document.getElementById('loginOverlay').style.display = 'flex';
+                document.getElementById('mainContent').style.display = 'none';
+                document.getElementById('usernameInput').value = '';
+                document.getElementById('errorMessage').style.display = 'none';
+            }
+        });
+        
+        // 检查是否已登录
+        function checkLogin() {
+            const currentUser = localStorage.getItem('currentUser');
+            if (currentUser && allowedUsers.includes(currentUser)) {
+                document.getElementById('loginOverlay').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                document.getElementById('currentUser').textContent = currentUser;
+                return true;
+            }
+            return false;
+        }
+        
+        // 页面加载时检查登录状态
+        window.addEventListener('load', function() {
+            if (!checkLogin()) {
+                // 设置默认日期为今天
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('liveDate').value = today;
+            }
+        });
+
+        // 存储所有数据的数组
+        let allData = [];
+        
+        // 从本地存储加载数据
+        function loadData() {
+            const savedData = localStorage.getItem('gameLiveData');
+            if (savedData) {
+                allData = JSON.parse(savedData);
+                renderTable();
+            }
+        }
+        
+        // 保存数据到本地存储
+        function saveData() {
+            localStorage.setItem('gameLiveData', JSON.stringify(allData));
+        }
+        
+        // 渲染表格
+        function renderTable() {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+            
+            allData.forEach((data, index) => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${data.liveDate}</td>
+                    <td>${data.liveSession}</td>
+                    <td>${data.clientId}</td>
+                    <td>${data.orderAmount}</td>
+                    <td>${data.orderType}</td>
+                    <td>${data.clientSource}</td>
+                    <td>${data.remarks || '-'}</td>
+                    <td><button onclick="deleteRow(${index})">删除</button></td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // 添加新记录
+        document.getElementById('addBtn').addEventListener('click', function() {
+            const liveDate = document.getElementById('liveDate').value;
+            const liveSession = document.getElementById('liveSession').value;
+            const clientId = document.getElementById('clientId').value;
+            const orderAmount = document.getElementById('orderAmount').value;
+            const orderType = document.getElementById('orderType').value;
+            const clientSource = document.getElementById('clientSource').value;
+            const remarks = document.getElementById('remarks').value;
+            
+            // 简单验证
+            if (!liveDate || !liveSession || !clientId || !orderAmount || !orderType || !clientSource) {
+                alert('请填写所有必填字段！');
+                return;
+            }
+            
+            // 添加到数据数组
+            allData.push({
+                liveDate,
+                liveSession,
+                clientId,
+                orderAmount,
+                orderType,
+                clientSource,
+                remarks
+            });
+            
+            // 保存并刷新表格
+            saveData();
+            renderTable();
+            
+            // 清空表单
+            document.getElementById('clientId').value = '';
+            document.getElementById('orderAmount').value = '';
+            document.getElementById('remarks').value = '';
+            document.getElementById('clientId').focus();
+        });
+        
+        // 删除行
+        function deleteRow(index) {
+            if (confirm('确定要删除这条记录吗？')) {
+                allData.splice(index, 1);
+                saveData();
+                renderTable();
+            }
+        }
+        
+        // 导出Excel
+        document.getElementById('exportBtn').addEventListener('click', function() {
+            if (allData.length === 0) {
+                alert('没有数据可导出！');
+                return;
+            }
+            
+            // 创建工作表
+            const ws = XLSX.utils.json_to_sheet(allData);
+            
+            // 创建工作簿
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "直播数据");
+            
+            // 生成文件名
+            const date = new Date();
+            const fileName = `游戏直播数据_${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}.xlsx`;
+            
+            // 导出文件
+            XLSX.writeFile(wb, fileName);
+        });
+        
+        // 清空数据
+        document.getElementById('clearBtn').addEventListener('click', function() {
+            if (confirm('确定要清空所有数据吗？此操作不可恢复！')) {
+                allData = [];
+                saveData();
+                renderTable();
+            }
+        });
+    </script>
+</body>
+</html>
